@@ -2,7 +2,7 @@
 
 import random
 from Crypto.Util.number import bytes_to_long, inverse
-from secret import secrets, flag
+#from secret import secrets, flag
 
 
 def get_prime(secret):
@@ -11,8 +11,9 @@ def get_prime(secret):
         prime = prime << 1
     return prime - 1
 
-
-secrets = random.shuffle(secrets)
+flag = b'theworsttestever'
+secrets = [2048,4096,1024,3072]
+random.shuffle(secrets)
 
 m = bytes_to_long(flag)
 p = get_prime(secrets[0])
