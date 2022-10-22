@@ -1,5 +1,5 @@
 import random
-from Crypto.Util.number import bytes_to_long, long_to_bytes, isPrime, inverse
+from Crypto.Util.number import bytes_to_long, long_to_bytes, isPrime, inverse, GCD
 from math import ceil
 from Crypto.Cipher import PKCS1_OAEP
 from Crypto.PublicKey import RSA
@@ -90,6 +90,44 @@ def fastPrimes(): # Real attack (Coppersmith, Pohlig-hellman...) => https://gist
 	plaintext = cipher.decrypt(c)
 	print(plaintext.decode())
 
+import time
+def RonVSWhit(): # => https://sbseminar.wordpress.com/2012/02/16/the-recent-difficulties-with-rsa/
+	pubKeys = [0] # just to remove index "0"
+	pubExps = [0]
+	#for idx, i in enumerate(range(1,51)):
+	for i in range(1,51):
+		with open("4.RSA/4.Primes_2/keys_and_messages_RonVSWhit/"+str(i)+".pem", 'r') as f:
+			key = f.read().rstrip('\n')
+		pubKey = RSA.importKey(key)
+		n = pubKey.n
+		e = pubKey.e
+		pubKeys.append(n)
+		pubExps.append(e)
+		#print(i, ":", e, n.bit_length(), n)
+	
+	
+	for n1 in pubKeys:
+		for n2 in pubKeys:
+			p = GCD(n1,n2)
+			if p != 1 and p != n1 and p != n2:
+				q = n1 // p # == n2 // p
+				#print(p,q)
+				#print(n1)
+				ind = pubKeys.index(n1) # Use of Dico : https://github.com/onealmond/hacking-lab/blob/master/cryptohack/ron-was-wrong%2Cwhit-is-right/decrypt.py
+				e = pubExps[ind]
+				#print(e)
+				phi = (p-1) * (q-1)
+				d = inverse(e, phi)
+				#print(ind)
+				with open("4.RSA/4.Primes_2/keys_and_messages_RonVSWhit/"+str(ind)+".ciphertext", 'r') as f:
+					ciphertext = f.read().rstrip('\n')
+				c = long_to_bytes( int(ciphertext,16) )
+
+				key = RSA.construct((n1, e, d))
+				plain = PKCS1_OAEP.new(key)
+				plaintext = plain.decrypt(c)
+
+				return plaintext.decode()
 
 def main():
 	#n = 383347712330877040452238619329524841763392526146840572232926924642094891453979246383798913394114305368360426867021623649667024217266529000859703542590316063318592391925062014229671423777796679798747131250552455356061834719512365575593221216339005132464338847195248627639623487124025890693416305788160905762011825079336880567461033322240015771102929696350161937950387427696385850443727777996483584464610046380722736790790188061964311222153985614287276995741553706506834906746892708903948496564047090014307484054609862129530262108669567834726352078060081889712109412073731026030466300060341737504223822014714056413752165841749368159510588178604096191956750941078391415634472219765129561622344109769892244712668402761549412177892054051266761597330660545704317210567759828757156904778495608968785747998059857467440128156068391746919684258227682866083662345263659558066864109212457286114506228470930775092735385388316268663664139056183180238043386636254075940621543717531670995823417070666005930452836389812129462051771646048498397195157405386923446893886593048680984896989809135802276892911038588008701926729269812453226891776546037663583893625479252643042517196958990266376741676514631089466493864064316127648074609662749196545969926051
@@ -111,6 +149,8 @@ def main():
 	# print( marinSecrets(n,e,c) )
 
 	#fastPrimes()
+	
+	print(RonVSWhit())
 
 if __name__ == '__main__':
 	main()
