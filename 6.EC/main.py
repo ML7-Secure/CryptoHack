@@ -45,8 +45,9 @@ def scalarMultiplication(Px, Py, n, a, mod):
         n //= 2
     return R
 
-def EC_keyExchange(Qa, nB, Gx, Gy, a, mod):
+def EC_keyExchange(Qa, nB, a, mod):
     # Bob's side :
+    # Qa = nA * G
     Qa_x = Qa[0]
     Qa_y = Qa[1]
     S = scalarMultiplication(Qa_x, Qa_y, nB, a, mod)
@@ -54,13 +55,17 @@ def EC_keyExchange(Qa, nB, Gx, Gy, a, mod):
     key = sha1(str(S_x).encode()).hexdigest()
     return key
 
-    # Alice's side : 
+    # Alice's side :
+    # Qb = nB * G 
     # Qb_x = Qb[0]
     # Qb_y = Qb[1]
     # assert S == scalarMultiplication(Qb_x, Qb_y, nA, a, mod)
 
-def efficient_EC_keyExchange(Qa_x, nB, Gx, Gy, a, mod):
-    pass
+def efficient_EC_keyExchange(Qa_x, nB, a, mod):
+    # Use curve to find 'y'
+    S = scalarMultiplication(Qa_x, Qa_x, nB, a, mod)
+    S_x = S[0]
+    return S_x
 
 def main():
     # Px = 5274
@@ -105,12 +110,15 @@ def main():
     
     #print( f(x, y, a, b, mod) )
 
-    Qa = (815, 3190)
-    nB = 1829
-    Gx = 1804
-    Gy = 5368
-    key = EC_keyExchange(Qa, nB, Gx, Gy, a, mod)
-    print(key)
+    # Qa = (815, 3190)
+    # nB = 1829
+    # key = EC_keyExchange(Qa, nB, a, mod)
+    # print(key)
+
+    Qa_x = 4726
+    nB = 6534
+    S = efficient_EC_keyExchange(Qa_x, nB, a, mod)
+    print(S)
     
 if __name__ == '__main__':
     main()
