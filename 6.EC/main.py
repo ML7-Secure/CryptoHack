@@ -4,6 +4,15 @@ from hashlib import sha1
 def f(x, y, a, b, p):
     return ( pow(x, 3, p) + a * x + b - pow(y, 2, p) ) % p
 
+def modSquareRoot(x, q):
+    for i in range(1, q):
+        if pow(i, 2) % q == x:
+            return (i, q - i)
+    return None
+
+def get_y(x, a, b, p):
+	return modSquareRoot((pow(x, 3) + a * x + b) % p, p)
+
 def pointAddition(Px, Py, Qx, Qy, a, mod):
     if Px == 0 and Py == 0:
         return Qx, Qy
@@ -61,9 +70,13 @@ def EC_keyExchange(Qa, nB, a, mod):
     # Qb_y = Qb[1]
     # assert S == scalarMultiplication(Qb_x, Qb_y, nA, a, mod)
 
-def efficient_EC_keyExchange(Qa_x, nB, a, mod):
-    # Use curve to find 'y'
-    S = scalarMultiplication(Qa_x, Qa_x, nB, a, mod)
+def efficient_EC_keyExchange(Qa_x, nB, a, b, mod):
+    Qa_y_1, Qa_y_2 = get_y(Qa_x, a, b, mod)
+    if (Qa_y_1 % 4) == 3:
+        Qa_y = Qa_y_1
+    else:
+        Qa_y = Qa_y_2
+    S = scalarMultiplication(Qa_x, Qa_y, nB, a, mod)
     S_x = S[0]
     return S_x
 
@@ -117,7 +130,7 @@ def main():
 
     Qa_x = 4726
     nB = 6534
-    S = efficient_EC_keyExchange(Qa_x, nB, a, mod)
+    S = efficient_EC_keyExchange(Qa_x, nB, a, b, mod)
     print(S)
     
 if __name__ == '__main__':
