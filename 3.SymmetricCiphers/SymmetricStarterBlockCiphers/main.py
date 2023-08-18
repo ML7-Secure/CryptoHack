@@ -1,5 +1,9 @@
+from Crypto.Util.number import bytes_to_long, long_to_bytes
+import functools
+import operator
 
 import requests
+
 def get(request):
     base_url="http://aes.cryptohack.org/"
     req = requests.get(base_url+request)
@@ -8,10 +12,16 @@ def get(request):
 def decryptAPI(ciphertext, page:str):
     dico = get(page+'decrypt/'+ciphertext)
     plaintext = dico['plaintext']
+    return plaintext
+    """
     plain = int(plaintext,16) # To int
     p = plain.to_bytes(len(plaintext)//2, 'big')
+    try:
+        print(p.decode())
+    except UnicodeDecodeError as e:
+        print(e)
     return p
-    #return p.decode() 
+    """
 
 def encryptFlagAPI(page:str):
     dico = get(page+'encrypt_flag/')
@@ -50,7 +60,20 @@ def main():
     page = "ecbcbcwtf/"
     dico = encryptFlagAPI(page)
     ct = dico['ciphertext']
-    print(ct)
+
+    iv = ct[0:32]
+    cipher = ct[32:]
+    plain = decryptAPI(ct[32:], page)
+
+    res = int(plain[0:32],16) ^ int(iv, 16) # 1st block
+    flag1 = long_to_bytes(res)
     
+    res = int(plain[32:],16) ^ int(cipher[:32], 16) # 2nd block
+    flag2 = long_to_bytes(res)
+
+    flag = flag1+flag2
+    print(flag)
+
+
 if __name__ == '__main__':
 	main()
